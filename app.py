@@ -179,6 +179,56 @@ def ocr_gemini(file_path, document_type):
             # -------------------------------------------------------------
             # FIN NUEVO BLOQUE
             # -------------------------------------------------------------
+            # -------------------------------------------------------------
+            # NUEVO BLOQUE: TARJETA ÚNICA DE CIRCULACIÓN (TUC)
+            # -------------------------------------------------------------
+            elif document_type == "Tarjeta Única de Circulación (TUC)":
+                prompt = """
+                *INSTRUCCIÓN:* Analiza la imagen adjunta, que es una Tarjeta Única de Circulación (TUC) o Tarjeta de Habilitación Vehicular de Perú (MTC).
+
+                1. *CLASIFICACIÓN:* Determina si el documento es una TUC o Tarjeta de Habilitación Vehicular de Perú.
+                2. *SALIDA CONDICIONAL:*
+                    * *SI ES TUC:* Extrae *TODOS* los campos solicitados. Si algún campo no es visible, usa estrictamente una cadena vacía ("") para ese campo. NO ADIVINES O INFIERAS DATOS. Devuelve los campos *EXCLUSIVAMENTE* en el FORMATO JSON requerido.
+                    * *SI NO ES TUC:* Devuelve *EXCLUSIVAMENTE* la cadena de texto: "No es del tipo del documento seleccionado".
+
+                *CAMPOS JSON (TUC):* {
+                    "tipo_documento": "TUC / Habilitación Vehicular",
+                    "numero_tuc": "...",
+                    "vigente_desde": "DD/MM/AAAA",
+                    "vigente_hasta": "DD/MM/AAAA",
+                    "nombre_o_razon_social": "...",
+                    "ruc": "...",
+                    "partida_registral": "...",
+                    "modalidad_de_servicio": "...",
+                    "documento_sustento": "...",
+                    "placa_no": "...",
+                    "marca": "...",
+                    "carroceria": "...",
+                    "vin": "...",
+                    "n_de_serie_de_chasis": "...",
+                    "color": "...",
+                    "n_de_asientos": "...",
+                    "n_de_ejes": "...",
+                    "peso_neto_kg": "...",
+                    "peso_bruto_kg": "...",
+                    "carga_util_kg": "...",
+                    "ano_modelo": "...",
+                    "largo_mts": "...",
+                    "ancho_mts": "...",
+                    "alto_mts": "..."
+                }
+
+                *IMPORTANTE:* No incluyas explicaciones, markdown extra o texto fuera del JSON o la frase de error.
+                """
+                response = client.models.generate_content(
+                    model='gemini-2.5-flash',
+                    contents=[prompt, uploaded_file],
+                    config={"response_mime_type": "application/json"} 
+                )
+            
+            # -------------------------------------------------------------
+            # FIN NUEVO BLOQUE TUC
+            # -------------------------------------------------------------
 
             else:
                 prompt = "Extrae todo el texto contenido en este documento/imagen en español."
@@ -186,6 +236,7 @@ def ocr_gemini(file_path, document_type):
                     model='gemini-2.5-flash',
                     contents=[prompt, uploaded_file]
                 )
+            
 
             # 4. Eliminar el archivo después de usarlo
             client.files.delete(name=uploaded_file.name)
@@ -359,7 +410,7 @@ st.markdown("<p class='info-text'>Sube un archivo PDF o imagen (JPG, PNG) y el s
 
 document_type = st.selectbox(
     "Selecciona el tipo de documento a procesar:",
-    ("DNI", "Tarjeta de Propiedad", "Tarjeta de Identificación") # AGREGADO
+    ("DNI", "Tarjeta de Propiedad", "Tarjeta de Identificación", "Tarjeta Única de Circulación (TUC)")
 )
 
 uploaded_file = st.file_uploader(
@@ -547,7 +598,60 @@ if uploaded_file is not None:
                 # --------------------------------------------------------------------------
                 # FIN NUEVA LÓGICA DE VISUALIZACIÓN
                 # --------------------------------------------------------------------------
+                # --------------------------------------------------------------------------
+                # NUEVA LÓGICA DE VISUALIZACIÓN: TARJETA ÚNICA DE CIRCULACIÓN (TUC)
+                # --------------------------------------------------------------------------
+                elif document_type == "Tarjeta Única de Circulación (TUC)":
+                    st.text_input("Tipo Documento", data.get("tipo_documento", ""), disabled=True, key=f"tipo_doc_tuc-{time.time()}")
+                    st.text_input("N° TUC", data.get("numero_tuc", ""), disabled=True, key=f"num_tuc-{time.time()}")
+                    
+                    col_tuc_v1, col_tuc_v2 = st.columns(2)
+                    with col_tuc_v1:
+                        st.text_input("Vigente Desde", data.get("vigente_desde", ""), disabled=True, key=f"desde_tuc-{time.time()}")
+                    with col_tuc_v2:
+                        st.text_input("Vigente Hasta", data.get("vigente_hasta", ""), disabled=True, key=f"hasta_tuc-{time.time()}")
+                        
+                    st.markdown("---")
+                    st.subheader("Datos del Transportista")
+                    st.text_input("Razón Social", data.get("nombre_o_razon_social", ""), disabled=True, key=f"rs_tuc-{time.time()}")
+                    st.text_input("RUC", data.get("ruc", ""), disabled=True, key=f"ruc_tuc-{time.time()}")
+                    st.text_input("Partida Registral", data.get("partida_registral", ""), disabled=True, key=f"pr_tuc-{time.time()}")
+                    st.text_input("Modalidad de Servicio", data.get("modalidad_de_servicio", ""), disabled=True, key=f"mod_tuc-{time.time()}")
+                    st.text_input("Documento Sustento", data.get("documento_sustento", ""), disabled=True, key=f"doc_s_tuc-{time.time()}")
 
+                    st.markdown("---")
+                    st.subheader("Datos del Vehículo")
+                    
+                    col_tuc_v3, col_tuc_v4 = st.columns(2)
+                    with col_tuc_v3:
+                        st.text_input("Placa N°", data.get("placa_no", ""), disabled=True, key=f"placa_tuc-{time.time()}")
+                        st.text_input("Marca", data.get("marca", ""), disabled=True, key=f"marca_tuc-{time.time()}")
+                        st.text_input("Carrocería", data.get("carroceria", ""), disabled=True, key=f"carroceria_tuc-{time.time()}")
+                        st.text_input("N° Asientos", data.get("n_de_asientos", ""), disabled=True, key=f"asientos_tuc-{time.time()}")
+                        st.text_input("N° Ejes", data.get("n_de_ejes", ""), disabled=True, key=f"ejes_tuc-{time.time()}")
+                    with col_tuc_v4:
+                        st.text_input("Color", data.get("color", ""), disabled=True, key=f"color_tuc-{time.time()}")
+                        st.text_input("Año Modelo", data.get("ano_modelo", ""), disabled=True, key=f"ano_tuc-{time.time()}")
+                        st.text_input("VIN", data.get("vin", ""), disabled=True, key=f"vin_tuc-{time.time()}")
+                        st.text_input("N° Serie Chasis", data.get("n_de_serie_de_chasis", ""), disabled=True, key=f"chasis_tuc-{time.time()}")
+
+                    st.markdown("---")
+                    st.subheader("Pesos y Dimensiones")
+
+                    col_tuc_p1, col_tuc_p2, col_tuc_p3 = st.columns(3)
+                    with col_tuc_p1:
+                        st.text_input("Peso Neto (kg)", data.get("peso_neto_kg", ""), disabled=True, key=f"pneto_tuc-{time.time()}")
+                        st.text_input("Largo (mts)", data.get("largo_mts", ""), disabled=True, key=f"largo_tuc-{time.time()}")
+                    with col_tuc_p2:
+                        st.text_input("Peso Bruto (kg)", data.get("peso_bruto_kg", ""), disabled=True, key=f"pbruto_tuc-{time.time()}")
+                        st.text_input("Ancho (mts)", data.get("ancho_mts", ""), disabled=True, key=f"ancho_tuc-{time.time()}")
+                    with col_tuc_p3:
+                        st.text_input("Carga Útil (kg)", data.get("carga_util_kg", ""), disabled=True, key=f"carga_tuc-{time.time()}")
+                        st.text_input("Alto (mts)", data.get("alto_mts", ""), disabled=True, key=f"alto_tuc-{time.time()}")
+                
+                # --------------------------------------------------------------------------
+                # FIN LÓGICA DE VISUALIZACIÓN TUC
+                # --------------------------------------------------------------------------
                 # Opcional: Mostrar el JSON crudo en un expander
                 with st.expander("Ver JSON Crudo"):
                     st.json(data)
