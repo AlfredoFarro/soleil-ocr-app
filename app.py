@@ -119,6 +119,67 @@ def ocr_gemini(file_path, document_type):
                     contents=[prompt, uploaded_file],
                     config={"response_mime_type": "application/json"} 
                 )
+
+            # -------------------------------------------------------------
+            # NUEVO BLOQUE: TARJETA DE IDENTIFICACIÓN VEHICULAR ELECTRÓNICA
+            # -------------------------------------------------------------
+            elif document_type == "Tarjeta de Identificación":
+                prompt = """
+                *INSTRUCCIÓN:* Analiza la imagen adjunta. Esta contiene una Tarjeta de Identificación Vehicular Electrónica (TIVE) de SUNARP (Perú).
+
+                1. *CLASIFICACIÓN:* Determina si el documento es una Tarjeta de Identificación Vehicular Electrónica de SUNARP.
+                2. *SALIDA CONDICIONAL:*
+                    * *SI ES TIVE:* Extrae *TODOS* los campos solicitados. Si algún campo no es visible, usa estrictamente una cadena vacía ("") para ese campo. NO ADIVINES O INFIERAS DATOS. Devuelve los campos *EXCLUSIVAMENTE* en el FORMATO JSON requerido.
+                    * *SI NO ES TIVE:* Devuelve *EXCLUSIVAMENTE* la cadena de texto: "No es del tipo del documento seleccionado".
+
+                *CAMPOS JSON (TIVE):* {
+                    "tipo_documento": "Tarjeta de Identificación Vehicular",
+                    "codigo_verificacion": "...",
+                    "titulo_no": "...",
+                    "fecha_titulo": "DD/MM/AAAA",
+                    "placa_no": "...",
+                    "partida_registral": "...",
+                    "zona_registral_no": "...",
+                    "sede_registral": "...",
+                    "dua_dam": "...",
+                    "categoria": "...",
+                    "marca": "...",
+                    "modelo": "...",
+                    "ano_modelo": "...",
+                    "color": "...",
+                    "numero_vin": "...",
+                    "numero_serie": "...",
+                    "carroceria": "...",
+                    "potencia": "...",
+                    "form_rod": "...",
+                    "traccion": "...",
+                    "combustible": "...",
+                    "asientos": "...",
+                    "cilindros": "...",
+                    "ruedas": "...",
+                    "ejes": "...",
+                    "cilindrada": "...",
+                    "longitud": "...",
+                    "altura": "...",
+                    "ancho": "...",
+                    "p_bruto": "...",
+                    "p_neto": "...",
+                    "carga_util": "...",
+                    "pasajeros": "..."
+                }
+
+                *IMPORTANTE:* No incluyas explicaciones, markdown extra o texto fuera del JSON o la frase de error.
+                """
+                response = client.models.generate_content(
+                    model='gemini-2.5-flash',
+                    contents=[prompt, uploaded_file],
+                    config={"response_mime_type": "application/json"} 
+                )
+            
+            # -------------------------------------------------------------
+            # FIN NUEVO BLOQUE
+            # -------------------------------------------------------------
+
             else:
                 prompt = "Extrae todo el texto contenido en este documento/imagen en español."
                 response = client.models.generate_content(
@@ -143,7 +204,7 @@ st.set_page_config(
 )
 
 # --- COLORES CORPORATIVOS ---
-SOLEIL_BLUE = "#263F8C"   # Pantone Blue 072C
+SOLEIL_BLUE = "#263F8C"  # Pantone Blue 072C
 SOLEIL_YELLOW = "#EEAD1A" # Pantone 1235
 
 # --- CSS PERSONALIZADO CON MODO CLARO FORZADO ---
@@ -174,7 +235,7 @@ st.markdown(
 
         .logo-container img {{
             display: inline-block;
-            max-height: 100px;   /* tamaño máximo razonable */
+            max-height: 100px;    /* tamaño máximo razonable */
             width: auto;
             height: auto;
             object-fit: contain;
@@ -298,7 +359,7 @@ st.markdown("<p class='info-text'>Sube un archivo PDF o imagen (JPG, PNG) y el s
 
 document_type = st.selectbox(
     "Selecciona el tipo de documento a procesar:",
-    ("DNI", "Tarjeta de Propiedad")
+    ("DNI", "Tarjeta de Propiedad", "Tarjeta de Identificación") # AGREGADO
 )
 
 uploaded_file = st.file_uploader(
@@ -412,6 +473,80 @@ if uploaded_file is not None:
                         st.text_input("Vig. Temp.", data.get("vig_temp", ""), disabled=True, key=f"vig_temp_prop-{time.time()}")
                     
                     st.text_input("Domicilio", data.get("domicilio", ""), disabled=True, key=f"dom_prop-{time.time()}")
+                
+                # --------------------------------------------------------------------------
+                # NUEVA LÓGICA DE VISUALIZACIÓN: TARJETA DE IDENTIFICACIÓN VEHICULAR
+                # --------------------------------------------------------------------------
+                elif document_type == "Tarjeta de Identificación":
+                    st.text_input("Tipo Documento", data.get("tipo_documento", ""), disabled=True, key=f"tipo_doc_tive-{time.time()}")
+                    
+                    st.markdown("---")
+                    st.subheader("Registro y Título")
+                    
+                    col_tive_1, col_tive_2 = st.columns(2)
+                    with col_tive_1:
+                        st.text_input("Placa No.", data.get("placa_no", ""), disabled=True, key=f"placa_tive-{time.time()}")
+                        st.text_input("Partida Registral", data.get("partida_registral", ""), disabled=True, key=f"part_reg_tive-{time.time()}")
+                        st.text_input("Título No.", data.get("titulo_no", ""), disabled=True, key=f"titulo_tive-{time.time()}")
+                        st.text_input("Fecha Título", data.get("fecha_titulo", ""), disabled=True, key=f"fecha_titulo_tive-{time.time()}")
+                    with col_tive_2:
+                        st.text_input("Zona Registral No.", data.get("zona_registral_no", ""), disabled=True, key=f"zona_tive-{time.time()}")
+                        st.text_input("Sede Registral", data.get("sede_registral", ""), disabled=True, key=f"sede_tive-{time.time()}")
+                        st.text_input("Código Verificación", data.get("codigo_verificacion", ""), disabled=True, key=f"cod_verif_tive-{time.time()}")
+                        st.text_input("DUA/DAM", data.get("dua_dam", ""), disabled=True, key=f"dua_dam_tive-{time.time()}")
+                        
+                    st.markdown("---")
+                    st.subheader("Datos del Vehículo")
+                    
+                    col_tive_a, col_tive_b, col_tive_c = st.columns(3)
+                    with col_tive_a:
+                        st.text_input("Marca", data.get("marca", ""), disabled=True, key=f"marca_tive-{time.time()}")
+                        st.text_input("Modelo", data.get("modelo", ""), disabled=True, key=f"modelo_tive-{time.time()}")
+                        st.text_input("Año Modelo", data.get("ano_modelo", ""), disabled=True, key=f"ano_mod_tive-{time.time()}")
+                        st.text_input("Color", data.get("color", ""), disabled=True, key=f"color_tive-{time.time()}")
+                        st.text_input("Carrocería", data.get("carroceria", ""), disabled=True, key=f"carroceria_tive-{time.time()}")
+                        st.text_input("Potencia", data.get("potencia", ""), disabled=True, key=f"potencia_tive-{time.time()}")
+                        
+                    with col_tive_b:
+                        st.text_input("N° VIN", data.get("numero_vin", ""), disabled=True, key=f"vin_tive-{time.time()}")
+                        st.text_input("N° Serie", data.get("numero_serie", ""), disabled=True, key=f"serie_tive-{time.time()}")
+                        st.text_input("Combustible", data.get("combustible", ""), disabled=True, key=f"combustible_tive-{time.time()}")
+                        st.text_input("Categoría", data.get("categoria", ""), disabled=True, key=f"cat_tive-{time.time()}")
+                        st.text_input("Form. Rod.", data.get("form_rod", ""), disabled=True, key=f"rod_tive-{time.time()}")
+                        st.text_input("Tracción (Versión)", data.get("traccion", ""), disabled=True, key=f"traccion_tive-{time.time()}")
+                        
+                    with col_tive_c:
+                        st.text_input("Longitud", data.get("longitud", ""), disabled=True, key=f"long_tive-{time.time()}")
+                        st.text_input("Altura", data.get("altura", ""), disabled=True, key=f"altura_tive-{time.time()}")
+                        st.text_input("Ancho", data.get("ancho", ""), disabled=True, key=f"ancho_tive-{time.time()}")
+                        st.text_input("Cilindrada", data.get("cilindrada", ""), disabled=True, key=f"cilindrada_tive-{time.time()}")
+                        st.text_input("Cilindros", data.get("cilindros", ""), disabled=True, key=f"cilindros_tive-{time.time()}")
+                        st.text_input("Ruedas", data.get("ruedas", ""), disabled=True, key=f"ruedas_tive-{time.time()}")
+                        st.text_input("Ejes", data.get("ejes", ""), disabled=True, key=f"ejes_tive-{time.time()}")
+
+                    st.markdown("---")
+                    st.subheader("Capacidades")
+                    
+                    col_tive_d, col_tive_e, col_tive_f = st.columns(3)
+                    with col_tive_d:
+                        st.text_input("Asientos", data.get("asientos", ""), disabled=True, key=f"asientos_tive-{time.time()}")
+                    with col_tive_e:
+                        st.text_input("Pasajeros", data.get("pasajeros", ""), disabled=True, key=f"pasajeros_tive-{time.time()}")
+                    with col_tive_f:
+                        st.text_input("P. Bruto", data.get("p_bruto", ""), disabled=True, key=f"p_bruto_tive-{time.time()}")
+                    
+                    col_tive_g, col_tive_h, col_tive_i = st.columns(3)
+                    with col_tive_g:
+                        st.text_input("P. Neto", data.get("p_neto", ""), disabled=True, key=f"p_neto_tive-{time.time()}")
+                    with col_tive_h:
+                        st.text_input("Carga Útil", data.get("carga_util", ""), disabled=True, key=f"carga_util_tive-{time.time()}")
+                    with col_tive_i:
+                        # Espacio vacío
+                        pass
+                
+                # --------------------------------------------------------------------------
+                # FIN NUEVA LÓGICA DE VISUALIZACIÓN
+                # --------------------------------------------------------------------------
 
                 # Opcional: Mostrar el JSON crudo en un expander
                 with st.expander("Ver JSON Crudo"):
